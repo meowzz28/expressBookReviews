@@ -66,37 +66,41 @@ public_users.get('/isbn/:isbn', async function (req, res) {
 });
   
 // Get book details based on author
-public_users.get('/author/:author',function (req, res) {
-    // Retrieve the author from the request parameters
+public_users.get('/author/:author', async function (req, res) {
     const author = req.params.author;
-    
-    // Obtain all the keys for the 'books' object
-    const isbns = Object.keys(books);
-    
-    // Create an array to hold any matching books
-    let matchingBooks = [];
-    
-    // Iterate through the keys to find books by the specified author
-    isbns.forEach((isbn) => {
-        if (books[isbn].author === author) {
-            // Add the matched book to the array, including its ISBN for reference
-            matchingBooks.push({
-                isbn: isbn,
-                title: books[isbn].title,
-                reviews: books[isbn].reviews
+
+    try {
+        // Simulating an asynchronous operation using a Promise
+        const getBooksByAuthor = new Promise((resolve, reject) => {
+            const isbns = Object.keys(books);
+            let matchingBooks = [];
+
+            isbns.forEach((isbn) => {
+                if (books[isbn].author === author) {
+                    matchingBooks.push({
+                        isbn: isbn,
+                        title: books[isbn].title,
+                        reviews: books[isbn].reviews
+                    });
+                }
             });
-        }
-    });
-  
-    // Check if any books were found
-    if (matchingBooks.length > 0) {
-        // Return the matching books neatly formatted
-        return res.status(200).send(JSON.stringify({ booksbyauthor: matchingBooks }, null, 4));
-    } else {
-        // Return a 404 error if no books match the author
-        return res.status(404).json({ message: "No books found by this author" });
+
+            if (matchingBooks.length > 0) {
+                resolve({ booksbyauthor: matchingBooks });
+            } else {
+                reject(new Error("No books found by this author"));
+            }
+        });
+
+        // Await the resolution of the Promise
+        const authorBooks = await getBooksByAuthor;
+        return res.status(200).send(JSON.stringify(authorBooks, null, 4));
+
+    } catch (error) {
+        // Catch the rejection from the Promise and return a 404 status
+        return res.status(404).json({ message: error.message });
     }
-  });
+});
 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
